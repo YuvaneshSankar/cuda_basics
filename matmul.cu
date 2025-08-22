@@ -61,9 +61,9 @@ int main(){
     int size_C=M*P*sizeof(float);
 
     //allocate host memeory
-    h_A=(float)malloc(size_A);
-    h_B=(float)malloc(size_B);
-    h_C=(float)malloc(size_C);
+    h_A=(float*)malloc(size_A);
+    h_B=(float*)malloc(size_B);
+    h_C=(float*)malloc(size_C);
 
     //intialize matrices
     srand(time(NULL));
@@ -81,7 +81,55 @@ int main(){
 
     //launch kernel
     dim3 blockDim(BLOCK_SIZE, BLOCK_SIZE);
-    dim3 gridDim((N + BLOCK_SIZE - 1) / BLOCK_SIZE, (M + BLOCK_SIZE - 1) / BLOCK_SIZE);
+    dim3 gridDim((P + BLOCK_SIZE - 1) / BLOCK_SIZE, (M + BLOCK_SIZE - 1) / BLOCK_SIZE);
 
+    //warm up runs
+    printf("Performing warm-up runs...\n");
+    for(int i=0;i<3;i++){
+        matmul_cpu(h_A,h_B,h_C,M,N,P);
+        matmul_gpu<<<gridDim,blockDim>>>(d_A,d_B,d_C,M,N,P);
+        cudaDeviceSynchronize();
+    }
+
+    //cpu time 
+    printf("Benchmarking CPU implementation...\n");
+    double cpu_total_time=0.0;
+    for(int i=0;i<20;i++){
+        double start_time=get_time();
+        matmul_cpu(h_A,h_B,h_C,M,N,P);
+        double end_time=get_time();
+        cpu_total_time+=end_time-start_time;
+    }
+    double cpu_avg_time=cpu_total_time/20.0;
+
+
+    //gpu time 
+    printf("Benchmarking GPU implementation...\n");
+    double gpu_total_time=0.0;
+    for(int i=0;i<20;i++){
+        double start_time=get_time();
+        matmul_gpu<<<gridDim,blockDim>>>(d_A,d_B,d_C,M,N,P);
+        cudaDeviceSynchronize();
+        double end_time=get_time();
+        gpu_total_time+=end_time-start_time;
+    }
+    double gpu_avg_time=gpu_total_time/20.0;
+
+
+
+    // Print results
+    printf("CPU average time: %f microseconds\n", (cpu_avg_time * 1e6f));
+    printf("GPU average time: %f microseconds\n", (gpu_avg_time * 1e6f));
+    printf("Speedup: %fx\n", cpu_avg_time / gpu_avg_time);
+
+    // Free memory
+    free(h_A);
+    free(h_B);
+    free(h_C);
+    cudaFree(d_A);
+    cudaFree(d_B);
+    cudaFree(d_C);
+
+    return 0;   
     
 }
