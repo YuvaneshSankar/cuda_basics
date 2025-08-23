@@ -3,7 +3,7 @@
 
 using namespace std;
 
-__global__ kernel(void){
+__global__ void kernel(void){
     int block_id = blockIdx.x + blockIdx.y * gridDim.x + blockIdx.z * gridDim.x * gridDim.y;
     int block_offset = block_id * blockIdx.x * blockIdx.y * blockIdx.z;
     int thread_offset = threadIdx.x + threadIdx.y * blockDim.x + threadIdx.z * blockDim.x * blockDim.y;
