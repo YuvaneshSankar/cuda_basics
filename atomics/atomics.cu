@@ -3,6 +3,8 @@
 
 #define itr 1000
 
+
+//software atomics ->done by me here in software zone
 __device__ int tryAtomicAdd(int* address, int incremental_val){
     __shared__ int lock;
 
@@ -35,6 +37,8 @@ __global__ void kernel(int* address, int incremental_val){
     }
 }
 
+
+//hardware atomic done by gpu hardware
 __global__ void kernel2(int* address, int incremental_val){
     for(int i=0;i<itr;i++){
         atomicAdd(address,incremental_val);
