@@ -62,6 +62,10 @@ int main(){
     CHECK_CUDA_ERROR(cudaMemcpyAsync(h_C,d_C,size,cudaMemcpyDeviceToHost,stream1));
 
 
+    // Synchronize streams makes sure all tasks are done in both streams
+    CHECK_CUDA_ERROR(cudaStreamSynchronize(stream1));
+    CHECK_CUDA_ERROR(cudaStreamSynchronize(stream2));
+
     // Verify result
     for (int i = 0; i < numOfElements; ++i) {
         if (fabs(h_A[i] + h_B[i] - h_C[i]) > 1e-5) {
