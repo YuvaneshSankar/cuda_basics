@@ -63,7 +63,10 @@ int main(){
     CHECK_CUDA(cudaMemcpy(d_B,&B,sizeof(float)*K*N,cudaMemcpyHostToDevice));
 
     float alpha=1.0f , beta=0.0f;
-    CHECK_CUBLAS(cublasSgemm(handle,CUBLAS_OP_N,CUBLAS_OP_N,M,N,K,&alpha,d_A,M,d_B,K,&beta,d_C,M));
+    //mathematically C = A * B
+    //but in cuBLAS, the API signature is effectively: C = op(B) * op(A)    (internally)
+    //so we have to interchage the order of A and B in the arguments
+    CHECK_CUBLAS(cublasSgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N, N, M, K, &alpha, d_B, N, d_A, K, &beta, d_C, N));
     CHECK_CUDA(cudaMemcpy(C_cublas_sgemm,d_C,sizeof(float)*M*N,cudaMemcpyDeviceToHost));
 
 
@@ -88,7 +91,7 @@ int main(){
     CHECK_CUDA(cudaMemcpy(d_B_h,&B_h,sizeof(half)*K*N,cudaMemcpyHostToDevice));
 
     half alpha_h=__float2half(1.0f) , beta_h=__float2half(0.0f);
-    CHECK_CUBLAS(cublasHgemm(handle,CUBLAS_OP_N,CUBLAS_OP_N,M,N,K,&alpha_h,d_A_h,M,d_B_h,K,&beta_h,d_C_h,M));
+    CHECK_CUBLAS(cublasHgemm(handle, CUBLAS_OP_N, CUBLAS_OP_N, N, M, K, &alpha_h, d_B_h, N, d_A_h, K, &beta_h, d_C_h, N));
     CHECK_CUDA(cudaMemcpy(C_h,d_C_h,sizeof(half)*M*N,cudaMemcpyDeviceToHost));
 
     // Convert to float on CPU
